@@ -17,6 +17,7 @@ mkdir -p "${DISTS}/${VERSION}" "${SRCS}"
 
 # ======================================================================
 
+TRIPLE_LIBC='loongarch64-unknown-linux-gnu'
 PATCHES="${ROOT_DIR}/patches"
 BUILD_DIR="${SRCS}/${VERSION}"
 DIST_DIR="${DISTS}/${VERSION}"
@@ -33,7 +34,7 @@ prepare()
     echo "📦 [Prepare] Setting up build environment..."
     
     # TODO: 在此处添加准备命令
-    # 例如：apt-get update && apt-get install -y build-essential
+    rm -rf ${SRCS}/${VERSION}
     git clone -b ${VERSION} --depth=1 https://github.com/mitsuhiko/minijinja ${SRCS}/${VERSION}
     
     echo "✅ [Prepare] Environment ready."
@@ -44,9 +45,18 @@ build()
 {
     echo "🔨 [Build] Compiling source code..."
     
-
-    cd ${BUILD_DIR}
-    cargo build --release --locked -p minijinja-cli
+    (
+        cd ${BUILD_DIR}
+        cargo build --release --locked -p minijinja-cli
+        local binary_arch_name="minijinja-cli-${TRIPLE_LIBC}"
+        mkdir -p .build/${binary_arch_name}
+        cp target/release/minijinja-cli .build/${binary_arch_name}/
+        cp {CHANGELOG.md,README.md,LICENSE} .build/${binary_arch_name}/
+        (
+            cd .build
+            tar czvf ${binary_arch_name}.tar.gz ${binary_arch_name}
+        )
+    )
 
 
     echo "✅ [Build] Compilation finished."
@@ -58,7 +68,7 @@ post_build()
     echo "📦 [Post-Build] Organizing artifacts..."
     
     # TODO: 在此处添加整理命令
-    cp /opt/jq/bin/jq $DIST_DIR/
+    cp ${BUILD_DIR}/.build/*.tar.gz $DIST_DIR/
     
     echo "✅ [Post-Build] Artifacts ready in ./dists/${VERSION}."
 }
