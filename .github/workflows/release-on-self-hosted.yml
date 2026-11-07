@@ -2,7 +2,7 @@ name: Auto Build minijinja (Self hosted)
 
 on:
   schedule:
-    - cron: '0 16 * * *'
+    - cron: '16 15 * * *'
   workflow_dispatch:
 
 env:
